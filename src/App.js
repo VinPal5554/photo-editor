@@ -1,23 +1,30 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from "react";
+import CanvasEditor from "./components/CanvasEditor";
+import Controls from "./components/Controls";
 
 function App() {
+  const [imageFile, setImageFile] = useState(null);
+  const [rotationAngle, setRotationAngle] = useState(0);
+
+  const handleImageUpload = (file) => {
+    setImageFile(file);
+  };
+
+  const handleRotationChange = (newAngle) => {
+    setRotationAngle(newAngle);
+  };
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <h1>Photo Editor</h1>
+      <Controls onRotationChange={handleRotationChange} />
+      <CanvasEditor imageFile={imageFile} rotationAngle={rotationAngle} />
+      <div>
+        <input
+          type="file"
+          onChange={(e) => handleImageUpload(e.target.files[0])}
+        />
+      </div>
     </div>
   );
 }
