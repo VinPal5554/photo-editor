@@ -3,79 +3,61 @@ import React, { useRef, useEffect, useState } from "react";
 const CanvasEditor = ({ imageFile, rotationAngle }) => {
   const canvasRef = useRef(null);
   const [image, setImage] = useState(null);
-  const [scaledImage, setScaledImage] = useState(null);
-
-  // Set the canvas size to take up most of the screen
-  const maxWidth = window.innerWidth * 0.9;  // 90% of the window width
-  const maxHeight = window.innerHeight * 0.8; // 80% of the window height
-
-  // Function to scale the image based on maxWidth and maxHeight while maintaining aspect ratio
-  const scaleImage = (img) => {
-    let width = img.width;
-    let height = img.height;
-
-    // Calculate scale ratio based on the max bounds, keeping the aspect ratio
-    const widthRatio = maxWidth / width;
-    const heightRatio = maxHeight / height;
-    const scaleRatio = Math.min(widthRatio, heightRatio); // Ensure proportional scaling
-
-    // If scale ratio is smaller than 1, scale the image
-    if (scaleRatio < 1) {
-      width = width * scaleRatio;
-      height = height * scaleRatio;
-    }
-
-    setScaledImage({ width, height, image: img });
-  };
 
   useEffect(() => {
-    const loadImage = () => {
-      if (imageFile) {
-        const img = new Image();
-        img.src = URL.createObjectURL(imageFile);
-        img.onload = () => {
-          setImage(img);
-          scaleImage(img);  // Scale the image to fit within the max dimensions
-        };
-      }
-    };
-
-    loadImage();
+    if (imageFile) {
+      const img = new Image();
+      img.src = URL.createObjectURL(imageFile);
+      img.onload = () => {
+        setImage(img);
+      };
+    }
   }, [imageFile]);
 
   useEffect(() => {
-    if (scaledImage) {
+    if (image) {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext("2d");
 
-      // Set canvas size to scaled image size or max dimensions if necessary
-      canvas.width = scaledImage.width;
-      canvas.height = scaledImage.height;
+      // Get screen size for scaling
+      const maxWidth = window.innerWidth * 0.9;
+      const maxHeight = window.innerHeight * 0.8;
 
-      // Clear the canvas before drawing the new image
+      // Calculate scale factor to fit within bounds while maintaining aspect ratio
+      let width = image.width;
+      let height = image.height;
+      const widthRatio = maxWidth / width;
+      const heightRatio = maxHeight / height;
+      const scaleRatio = Math.min(widthRatio, heightRatio, 1);
+
+      width *= scaleRatio;
+      height *= scaleRatio;
+
+      // Adjust canvas size for arbitrary rotation
+      const radians = (rotationAngle * Math.PI) / 180;
+      const cos = Math.abs(Math.cos(radians));
+      const sin = Math.abs(Math.sin(radians));
+      const canvasWidth = width * cos + height * sin;
+      const canvasHeight = width * sin + height * cos;
+
+      // Set canvas size
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+
+      // Clear previous drawing
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Move the canvas origin to the center for proper rotation
+      // Move origin to center, rotate, then draw
       ctx.translate(canvas.width / 2, canvas.height / 2);
-
-      // Rotate the image by the given angle
-      ctx.rotate((rotationAngle * Math.PI) / 180);
-
-      // Draw the image on the canvas after rotation
-      ctx.drawImage(
-        scaledImage.image,
-        -scaledImage.width / 2,
-        -scaledImage.height / 2
-      );
-
-      // Reset the canvas transformation matrix
+      ctx.rotate(radians);
+      ctx.drawImage(image, -width / 2, -height / 2, width, height);
       ctx.resetTransform();
     }
-  }, [scaledImage, rotationAngle]);
+  }, [image, rotationAngle]);
 
   return (
-    <div style={{ width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
-      <canvas ref={canvasRef} style={{ maxWidth: "100%", maxHeight: "100%" }}></canvas>
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+      <canvas ref={canvasRef} style={{ border: "1px solid black" }}></canvas>
     </div>
   );
 };
