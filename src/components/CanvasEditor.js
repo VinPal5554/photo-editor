@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 
-const CanvasEditor = ({ imageFile, rotationAngle }) => {
+const CanvasEditor = ({ imageFile, rotationAngle, flip }) => {
   const canvasRef = useRef(null);
   const [image, setImage] = useState(null);
 
@@ -23,7 +23,7 @@ const CanvasEditor = ({ imageFile, rotationAngle }) => {
       const maxWidth = window.innerWidth * 0.9;
       const maxHeight = window.innerHeight * 0.8;
 
-      // Calculate scale factor to fit within bounds while maintaining aspect ratio
+      // Scale the image to fit within screen bounds
       let width = image.width;
       let height = image.height;
       const widthRatio = maxWidth / width;
@@ -33,7 +33,7 @@ const CanvasEditor = ({ imageFile, rotationAngle }) => {
       width *= scaleRatio;
       height *= scaleRatio;
 
-      // Adjust canvas size for arbitrary rotation
+      // Adjust canvas size for rotation
       const radians = (rotationAngle * Math.PI) / 180;
       const cos = Math.abs(Math.cos(radians));
       const sin = Math.abs(Math.sin(radians));
@@ -47,13 +47,20 @@ const CanvasEditor = ({ imageFile, rotationAngle }) => {
       // Clear previous drawing
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Move origin to center, rotate, then draw
+      // Move origin to center, apply rotation
       ctx.translate(canvas.width / 2, canvas.height / 2);
       ctx.rotate(radians);
+
+      // Apply flip based on state
+      const flipX = flip.horizontal ? -1 : 1;
+      const flipY = flip.vertical ? -1 : 1;
+      ctx.scale(flipX, flipY);
+
+      // Draw image at adjusted position
       ctx.drawImage(image, -width / 2, -height / 2, width, height);
       ctx.resetTransform();
     }
-  }, [image, rotationAngle]);
+  }, [image, rotationAngle, flip]);
 
   return (
     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>

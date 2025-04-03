@@ -2,31 +2,30 @@ import React, { useState } from "react";
 import CanvasEditor from "./components/CanvasEditor";
 import Controls from "./components/Controls";
 
-function App() {
+const App = () => {
   const [imageFile, setImageFile] = useState(null);
   const [rotationAngle, setRotationAngle] = useState(0);
+  const [flip, setFlip] = useState({ horizontal: false, vertical: false });
 
-  const handleImageUpload = (file) => {
-    setImageFile(file);
+  const handleImageUpload = (event) => {
+    setImageFile(event.target.files[0]);
   };
 
-  const handleRotationChange = (newAngle) => {
-    setRotationAngle(newAngle);
+  const handleFlip = (direction) => {
+    setFlip((prevFlip) => ({
+      ...prevFlip,
+      [direction]: !prevFlip[direction], // Toggle flip state
+    }));
   };
 
   return (
-    <div className="App">
-      <h1>Photo Editor</h1>
-      <Controls onRotationChange={handleRotationChange} />
-      <CanvasEditor imageFile={imageFile} rotationAngle={rotationAngle} />
-      <div>
-        <input
-          type="file"
-          onChange={(e) => handleImageUpload(e.target.files[0])}
-        />
-      </div>
+    <div>
+      <h1 className="text-7xl text-center text-blue-200">Photo Editor</h1>
+      <input type="file" onChange={handleImageUpload} />
+      <Controls onRotationChange={setRotationAngle} onFlip={handleFlip} />
+      <CanvasEditor imageFile={imageFile} rotationAngle={rotationAngle} flip={flip} />
     </div>
   );
-}
+};
 
 export default App;
