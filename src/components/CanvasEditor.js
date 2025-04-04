@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 
-const CanvasEditor = ({ imageFile, rotationAngle, flip }) => {
+const CanvasEditor = ({ imageFile, rotationAngle, flip, filter }) => {
   const canvasRef = useRef(null);
   const [image, setImage] = useState(null);
 
@@ -56,11 +56,17 @@ const CanvasEditor = ({ imageFile, rotationAngle, flip }) => {
       const flipY = flip.vertical ? -1 : 1;
       ctx.scale(flipX, flipY);
 
+      // Apply the filter
+      ctx.filter = filter; // Example: "grayscale(100%)", "sepia(50%)"
+
       // Draw image at adjusted position
       ctx.drawImage(image, -width / 2, -height / 2, width, height);
       ctx.resetTransform();
+
+       // Reset filter for future draws
+       ctx.filter = "none";
     }
-  }, [image, rotationAngle, flip]);
+  }, [image, rotationAngle, flip, filter]);
 
   return (
     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
