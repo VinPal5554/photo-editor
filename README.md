@@ -5,7 +5,7 @@ A simple, web-based photo editor built with React, HTML5 Canvas API, and Tailwin
 
 # Features
 - Image Upload: Upload and display an image on the canvas
-- Photo editing: Rotate the image in 45-degree increments (both left and right), horizontal and vertical flipping
+- Photo editing: Rotate, apply filters, and crop a photo
 - Responsive Layout: The canvas adapts to different screen sizes
 
 # Installation steps
