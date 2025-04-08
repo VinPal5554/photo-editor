@@ -2,11 +2,12 @@ import React, { useRef, useEffect, useState } from "react";
 
 const CanvasEditor = ({ imageFile, rotationAngle, flip, filter }) => {
   const canvasRef = useRef(null);
-  const [image, setImage] = useState(null); // Original image
-  const [croppedImage, setCroppedImage] = useState(null); // Cropped image
+  const [image, setImage] = useState(null);
+  const [croppedImage, setCroppedImage] = useState(null);
   const [cropArea, setCropArea] = useState(null);
   const [isCropping, setIsCropping] = useState(false);
   const [startPoint, setStartPoint] = useState(null);
+  const [history, setHistory] = useState([]); // History stack
 
   useEffect(() => {
     if (imageFile) {
@@ -14,15 +15,16 @@ const CanvasEditor = ({ imageFile, rotationAngle, flip, filter }) => {
       img.src = URL.createObjectURL(imageFile);
       img.onload = () => {
         setImage(img);
+        saveToHistory({ img, rotation: 0, flip: { horizontal: false, vertical: false }, filter: "none" });
       };
     }
   }, [imageFile]);
 
-  // Decide whether to use the original image or the cropped image
   const imageToRender = croppedImage || image;
 
   useEffect(() => {
     if (imageToRender) {
+      saveToHistory({ img: imageToRender, rotation: rotationAngle, flip, filter });
       drawImageOnCanvas();
     }
   }, [imageToRender, rotationAngle, flip, filter]);
@@ -60,7 +62,6 @@ const CanvasEditor = ({ imageFile, rotationAngle, flip, filter }) => {
     ctx.resetTransform();
     ctx.filter = "none";
 
-    // Draw the crop area (if exists)
     if (cropArea && cropArea.width > 0 && cropArea.height > 0) {
       ctx.strokeStyle = "red";
       ctx.lineWidth = 2;
@@ -85,8 +86,6 @@ const CanvasEditor = ({ imageFile, rotationAngle, flip, filter }) => {
       width: Math.abs(x - startPoint.x),
       height: Math.abs(y - startPoint.y),
     });
-
-    // Force canvas update to show crop area immediately
     drawImageOnCanvas();
   };
 
@@ -117,14 +116,28 @@ const CanvasEditor = ({ imageFile, rotationAngle, flip, filter }) => {
       cropArea.height
     );
 
-    // Save cropped image to state
     const croppedImg = new Image();
     croppedImg.src = tempCanvas.toDataURL("image/png");
     croppedImg.onload = () => {
-      setCroppedImage(croppedImg); // Update the cropped image state
+      saveToHistory({ img: croppedImg, rotation: rotationAngle, flip, filter });
+      setCroppedImage(croppedImg);
     };
 
-    setCropArea(null); // Clear crop area after cropping
+    setCropArea(null);
+  };
+
+  const saveToHistory = (state) => {
+    setHistory((prev) => [...prev, state]);
+  };
+
+  const undo = () => {
+    if (history.length > 1) {
+      const newHistory = [...history];
+      newHistory.pop();
+      const lastState = newHistory[newHistory.length - 1];
+      setCroppedImage(lastState.img);
+      setHistory(newHistory);
+    }
   };
 
   const downloadImage = () => {
@@ -136,25 +149,37 @@ const CanvasEditor = ({ imageFile, rotationAngle, flip, filter }) => {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", height: "100vh" }}>
-      <canvas
-        ref={canvasRef}
-        style={{ border: "1px solid black", cursor: "crosshair" }}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-      ></canvas>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 py-6">
+      <div className="relative bg-white p-4 shadow-xl rounded-lg">
+        <canvas
+          ref={canvasRef}
+          className="border-2 border-gray-700 cursor-crosshair rounded-lg shadow-lg hover:shadow-2xl transition-all duration-200 ease-in-out"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+        ></canvas>
+      </div>
 
-      <div style={{ marginTop: "10px" }}>
-        <button onClick={downloadImage} style={{ margin: "5px", padding: "8px 16px", cursor: "pointer" }}>
+      <div className="mt-6 flex space-x-6">
+        <button
+          onClick={downloadImage}
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-500 active:scale-105 transition-all duration-200 ease-in-out"
+        >
           Download Image
         </button>
         <button
           onClick={cropImage}
-          style={{ margin: "5px", padding: "8px 16px", cursor: "pointer" }}
+          className="px-6 py-3 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-500 active:scale-105 transition-all duration-200 ease-in-out"
           disabled={!cropArea || cropArea.width === 0 || cropArea.height === 0}
         >
           Crop Image
+        </button>
+        <button
+          onClick={undo}
+          className="px-6 py-3 bg-red-600 text-white rounded-lg shadow-md hover:bg-red-500 active:scale-105 transition-all duration-200 ease-in-out"
+          disabled={history.length <= 1}
+        >
+          Undo
         </button>
       </div>
     </div>
