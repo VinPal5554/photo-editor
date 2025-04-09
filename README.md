@@ -2,6 +2,9 @@
 
 A simple, web-based photo editor built with React, HTML5 Canvas API, and Tailwind CSS. This project allows users to upload images and perform basic image manipulation tasks like rotating, flipping, and adjusting image size.
 
+## Demo
+You can check out a live demo of the app here:  
+[**Live Demo**](https://photo-editor-sable.vercel.app/)
 
 # Features
 - Image Upload: Upload and display an image on the canvas
